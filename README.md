@@ -18,7 +18,9 @@
 
 1. **Updated Problem Statement & Charter:** [`Updated_Problem_Statement_and_Charter.md`](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/Updated_Problem_Statement_and_Charter.md)
 2. **Updated Project Plan (Progress vs. Plan):** [`Updated_Project_Plan.md`](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/Updated_Project_Plan.md)
-3. **Work-In-Progress (WIP) Technical Report:** [`result/CreditSight_WIP_Progress_Report.md`](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md)
+3. **Work-In-Progress (WIP) Technical Report:**
+   - Formal Word Document (DOCX): [`result/CreditSight_WIP_Progress_Report.docx`](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.docx)
+   - Technical Markdown Report (MD): [`result/CreditSight_WIP_Progress_Report.md`](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md)
 4. **Project Workflow & End-to-End Documentation:** [`result/PROJECT_WORKFLOW_DOCUMENTATION.md`](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/PROJECT_WORKFLOW_DOCUMENTATION.md)
 5. **Presentation Slides & Presentation Decks:**
    - 11-Slide Master Presentation Deck (PPTX): [`result/CreditSight_Presentation.pptx`](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_Presentation.pptx)
