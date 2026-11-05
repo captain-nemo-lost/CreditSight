@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CreditSight — Agentic AI Part 2 Evaluation</title>
+
+<!-- Fonts: Archivo Black (display) + Space Grotesk (body) + Space Mono (code) from Google -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================
+   THEME — Bold Fintech Signal: dark, authoritative, high-impact
+   Colors: deep slate-black gradient base + electric emerald focal card
+   ============================================ */
+:root {
+    /* Surfaces */
+    --bg-primary: #121820;
+    --bg-gradient: linear-gradient(135deg, #0d1219 0%, #1e2633 48%, #0d1219 100%);
+    --slide-bg: #0f141c;
+    --stage-bg: #000;
+    --card-bg: #00E676;              /* Electric fintech emerald focal card */
+    --card-bg-dim: #00b050;
+    --panel-bg: rgba(255, 255, 255, 0.04);
+    --panel-border: rgba(255, 255, 255, 0.10);
+
+    /* Text */
+    --text-primary: #ffffff;
+    --text-on-card: #081a12;
+    --text-secondary: #a0aec0;
+    --text-muted: #64748b;
+
+    /* Status colors */
+    --met: #00E676;
+    --partial: #f59e0b;
+    --notmet: #ef4444;
+
+    /* Typography — authored at the 1920×1080 stage size */
+    --font-display: 'Archivo Black', sans-serif;
+    --font-body: 'Space Grotesk', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --title-size: 92px;
+    --h2-size: 54px;
+    --body-size: 26px;
+    --small-size: 20px;
+
+    /* Spacing */
+    --slide-padding: 84px;
+    --content-gap: 40px;
+
+    /* Motion */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-normal: 0.65s;
+}
+
+/* ============================================
+   BASE — fixed-stage 1920×1080 CSS
+   ============================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--stage-bg);
+}
+
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg);
+}
+
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg);
+}
+
+.slide {
+    position: absolute;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--bg-gradient);
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    padding: var(--slide-padding);
+}
+
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+
+.deck-controls {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #888;
+}
+
+.deck-controls button {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #ddd;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 7px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    letter-spacing: 0.08em;
+    transition: all 0.2s ease;
+}
+.deck-controls button:hover { background: rgba(0, 230, 118, 0.25); color: #fff; border-color: var(--card-bg); }
+
+/* Progress bar — top */
+.progress-track {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: var(--card-bg);
+    width: 0;
+    z-index: 1001;
+    transition: width 0.35s var(--ease-out-expo);
+}
+
+@media print {
+    html, body { width: 1920px; height: auto; overflow: visible; background: #fff; }
+    .deck-viewport { position: static; overflow: visible; background: #fff; }
+    .deck-stage { position: static; width: auto; height: auto; transform: none !important; background: none; }
+    .slide {
+        position: relative;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto;
+        width: 1920px;
+        height: 1080px;
+        break-after: page;
+        page-break-after: always;
+    }
+    .slide:last-child { break-after: auto; page-break-after: auto; }
+    .deck-controls { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* Corner brand marks */
+.brand-mark {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    z-index: 5;
+}
+.brand-mark.tr { top: 34px; right: 84px; }
+.brand-mark.bl { bottom: 30px; left: 84px; }
+
+/* Slide number */
+.slide-num {
+    position: absolute;
+    top: 26px;
+    left: 84px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.22em;
+    color: var(--card-bg);
+    z-index: 5;
+}
+
+/* Section tag (nav breadcrumb) */
+.section-tag {
+    position: absolute;
+    top: 22px;
+    left: 180px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    z-index: 5;
+}
+
+/* Titles */
+.slide-title {
+    font-family: var(--font-display);
+    font-size: var(--h2-size);
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    margin: 42px 0 8px;
+    color: var(--text-primary);
+}
+.slide-title .accent { color: var(--card-bg); }
+.slide-sub {
+    font-size: var(--body-size);
+    color: var(--text-secondary);
+    max-width: 1300px;
+    line-height: 1.45;
+    margin-bottom: 34px;
+}
+
+/* Reveal-on-enter animations */
+.reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity var(--duration-normal) var(--ease-out-expo),
+                transform var(--duration-normal) var(--ease-out-expo);
+}
+.slide.visible .reveal { opacity: 1; transform: translateY(0); }
+.slide.visible .reveal:nth-child(1) { transition-delay: 0.05s; }
+.slide.visible .reveal:nth-child(2) { transition-delay: 0.13s; }
+.slide.visible .reveal:nth-child(3) { transition-delay: 0.21s; }
+.slide.visible .reveal:nth-child(4) { transition-delay: 0.29s; }
+.slide.visible .reveal:nth-child(5) { transition-delay: 0.37s; }
+.slide.visible .reveal:nth-child(6) { transition-delay: 0.45s; }
+.reveal[data-d="2"] { transition-delay: 0.2s !important; }
+.reveal[data-d="3"] { transition-delay: 0.35s !important; }
+.reveal[data-d="4"] { transition-delay: 0.5s !important; }
+
+/* ============================================
+   TITLE SLIDE — the electric emerald focal card
+   ============================================ */
+.title-card {
+    position: absolute;
+    left: 84px;
+    top: 168px;
+    width: 1290px;
+    background: var(--card-bg);
+    color: var(--text-on-card);
+    padding: 74px 84px 70px;
+    box-shadow: 0 30px 80px rgba(0, 230, 118, 0.22);
+}
+.title-card .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    margin-bottom: 26px;
+    opacity: 0.88;
+    font-weight: 700;
+}
+.title-card h1 {
+    font-family: var(--font-display);
+    font-size: 114px;
+    line-height: 0.94;
+    letter-spacing: -0.02em;
+    margin-bottom: 26px;
+}
+.title-card .tagline {
+    font-size: 29px;
+    font-weight: 500;
+    line-height: 1.35;
+    max-width: 950px;
+}
+.title-meta {
+    position: absolute;
+    right: 84px;
+    top: 168px;
+    width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+}
+.title-meta .meta-block {
+    border-top: 2px solid var(--panel-border);
+    padding-top: 18px;
+}
+.title-meta .meta-k {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+.title-meta .meta-v {
+    font-size: 23px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.35;
+}
+
+/* ============================================
+   GRID & CARD COMPONENTS
+   ============================================ */
+.grid { display: grid; gap: var(--content-gap); }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+.panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    padding: 34px 38px;
+}
+.panel h3 {
+    font-family: var(--font-body);
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+.panel .big-num {
+    font-family: var(--font-display);
+    font-size: 76px;
+    line-height: 1;
+    color: var(--card-bg);
+}
+.panel .big-label {
+    font-size: 21px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    line-height: 1.4;
+}
+.panel ul { list-style: none; }
+.panel li {
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    padding-left: 28px;
+    position: relative;
+    margin-bottom: 14px;
+}
+.panel li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--card-bg);
+    font-weight: 700;
+}
+.panel li strong { color: #fff; }
+.panel li .mono { font-family: var(--font-mono); font-size: 0.92em; color: var(--card-bg); }
+
+/* Status chips */
+.chip {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+.chip.met { background: rgba(0, 230, 118, 0.16); color: var(--met); border: 1px solid rgba(0, 230, 118, 0.4); }
+.chip.partial { background: rgba(245, 158, 11, 0.16); color: var(--partial); border: 1px solid rgba(245, 158, 11, 0.4); }
+
+/* Criteria table */
+.crit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 20px;
+}
+.crit-table th {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+    padding: 13px 16px;
+    border-bottom: 2px solid var(--panel-border);
+}
+.crit-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    line-height: 1.4;
+    vertical-align: middle;
+}
+.crit-table td.c-name { color: var(--text-primary); font-weight: 500; width: 33%; }
+.crit-table td.c-ev { font-family: var(--font-mono); font-size: 17px; color: var(--text-primary); }
+.crit-table tr:last-child td { border-bottom: none; }
+
+/* Agent rows (the "no random agents" table) */
+.agent-row {
+    display: grid;
+    grid-template-columns: 320px 1fr 1fr;
+    gap: 30px;
+    padding: 22px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    align-items: start;
+}
+.agent-row:last-child { border-bottom: none; }
+.agent-row .a-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+}
+.agent-row .a-name .a-num {
+    font-family: var(--font-display);
+    color: var(--card-bg);
+    margin-right: 12px;
+}
+.agent-row .a-name .a-fw {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--card-bg);
+    margin-top: 4px;
+}
+.agent-row .a-pain, .agent-row .a-why {
+    font-size: 19px;
+    line-height: 1.45;
+    color: var(--text-secondary);
+}
+.agent-row .a-pain strong, .agent-row .a-why strong { color: #fff; }
+.agent-head {
+    display: grid;
+    grid-template-columns: 320px 1fr 1fr;
+    gap: 30px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--panel-border);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* Chart slide */
+.chart-frame {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    padding: 26px 30px;
+    display: flex;
+    flex-direction: column;
+}
+.chart-frame img {
+    width: 100%;
+    height: 540px;
+    object-fit: contain;
+    background: #0d1219;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.chart-frame .chart-cap {
+    font-size: 20px;
+    color: var(--text-secondary);
+    margin-top: 16px;
+    line-height: 1.4;
+}
+.chart-frame .chart-cap strong { color: #fff; }
+
+/* Quote / takeaway strip */
+.takeaway {
+    margin-top: 34px;
+    border-left: 6px solid var(--card-bg);
+    padding: 20px 30px;
+    background: rgba(0, 230, 118, 0.08);
+    font-size: 23px;
+    line-height: 1.5;
+    color: #fff;
+}
+.takeaway .mono { font-family: var(--font-mono); color: var(--card-bg); font-size: 0.92em; }
+
+/* Inline editing affordance */
+.edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
+.edit-toggle {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 10001;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    font-size: 18px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+
+/* ============================================
+   WORKFLOW PIPELINE STYLES
+   ============================================ */
+.wf-container {
+    display: grid;
+    grid-template-columns: 290px 40px 1fr 40px 310px;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 10px;
+}
+.wf-col {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.wf-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--card-bg);
+    opacity: 0.85;
+}
+.wf-box {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.25s ease;
+}
+.wf-box:hover {
+    border-color: var(--card-bg);
+    box-shadow: 0 10px 30px rgba(0, 230, 118, 0.12);
+}
+.wf-badge {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--card-bg);
+    margin-bottom: 6px;
+    display: inline-block;
+}
+.wf-box h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+    line-height: 1.25;
+}
+.wf-box p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+.wf-box .pill {
+    margin-top: 8px;
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--card-bg);
+}
+
+/* Center Hub — Blackboard & 4 Agents */
+.wf-center-hub {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.bb-hub {
+    background: rgba(0, 230, 118, 0.04);
+    border: 1.5px dashed var(--card-bg);
+    padding: 14px 18px;
+}
+.bb-hub-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.bb-hub-head h4 {
+    font-family: var(--font-display);
+    font-size: 17px;
+    color: var(--card-bg);
+}
+.bb-hub-head span {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: #fff;
+    background: rgba(0, 230, 118, 0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+.bb-hub p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.agents-subgrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+.agent-node {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.agent-node:hover {
+    border-color: var(--card-bg);
+}
+.agent-node h5 {
+    font-size: 15px;
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: 3px;
+    line-height: 1.25;
+}
+.agent-node .fw {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--card-bg);
+    margin-bottom: 6px;
+    display: block;
+}
+.agent-node p {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    margin-bottom: 6px;
+}
+.agent-node .tool-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    line-height: 1.3;
+    display: inline-block;
+}
+
+.a2a-strip {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--panel-border);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.a2a-strip strong { color: var(--card-bg); }
+.a2a-strip .mono { font-family: var(--font-mono); font-size: 11.5px; color: #fff; }
+
+/* Decorative grid texture for title corner */
+.grid-texture {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 620px;
+    height: 620px;
+    background-image:
+        linear-gradient(rgba(0, 230, 118, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 230, 118, 0.05) 1px, transparent 1px);
+    background-size: 52px 52px;
+    pointer-events: none;
+    mask-image: radial-gradient(circle at bottom right, #000 0%, transparent 72%);
+    -webkit-mask-image: radial-gradient(circle at bottom right, #000 0%, transparent 72%);
+}
+</style>
+</head>
+<body>
+
+<div class="progress-track" id="progressTrack"></div>
+<div class="edit-hotzone" title="Edit mode"></div>
+<button class="edit-toggle" id="editToggle" title="Edit mode (E)">✏️</button>
+
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- ============================================
+     SLIDE 1 — TITLE
+     ============================================ -->
+<section class="slide" data-section="CreditSight · Part 2 Evaluation">
+  <div class="grid-texture"></div>
+  <div class="title-card reveal">
+    <div class="eyebrow">Agentic AI · Evaluation Phase 2</div>
+    <h1>CreditSight<br>Multi-Agent<br>System</h1>
+    <p class="tagline">An explainable, auditable commercial & retail loan underwriting engine — powered by a 4-agent collaborative crew using CrewAI, Google ADK, Blackboard Shared Memory, MCP, and 5-Tier Banking Guardrails.</p>
+  </div>
+  <div class="title-meta">
+    <div class="meta-block reveal" data-d="2">
+      <div class="meta-k">Team & Authors</div>
+      <div class="meta-v">Abhimanyu Sharma (230662)<br>Abhijeet Kumar Tiwari (230650)<br>Sachin Singh (230543)</div>
+    </div>
+    <div class="meta-block reveal" data-d="3">
+      <div class="meta-k">Criteria Coverage</div>
+      <div class="meta-v">11 of 11 criteria met (100%)<br><span style="color:#a0aec0;font-size:18px">all backed by code & tests</span></div>
+    </div>
+    <div class="meta-block reveal" data-d="4">
+      <div class="meta-k">Evaluation Evidence</div>
+      <div class="meta-v">45 recorded runs · 5 personas<br><span style="color:#a0aec0;font-size:18px">Boxplot + Heatmap verified</span></div>
+    </div>
+  </div>
+  <div class="brand-mark bl">BML MUNJAL UNIVERSITY · 2026</div>
+  <div class="brand-mark tr">CreditSight</div>
+</section>
+
+<!-- ============================================
+     SLIDE 2 — EXECUTIVE SUMMARY
+     ============================================ -->
+<section class="slide" data-section="Summary">
+  <div class="slide-num">01</div>
+  <div class="section-tag">What was built</div>
+  <h2 class="slide-title reveal">From <span class="accent">advertised</span> to actually built</h2>
+  <p class="slide-sub reveal">Monolithic LLMs hallucinate financial arithmetic, bypass statutory caps under prompt injection, and hide behind black-box opacity. CreditSight distributes loan underwriting across 4 specialized agents with deterministic tools and verifiable boundaries.</p>
+
+  <div class="grid grid-4">
+    <div class="panel reveal">
+      <div class="big-num">4</div>
+      <div class="big-label">real agents over 3 external MCP tools, each with isolated responsibilities and strict schemas</div>
+    </div>
+    <div class="panel reveal" data-d="2">
+      <div class="big-num">3</div>
+      <div class="big-label">architectures: Blackboard Hierarchical (primary), Parallel Fan-Out, and Sequential Pipeline</div>
+    </div>
+    <div class="panel reveal" data-d="3">
+      <div class="big-num">45</div>
+      <div class="big-label">recorded benchmark runs (≥40 required) across 3 architectures × 5 personas with boxplot</div>
+    </div>
+    <div class="panel reveal" data-d="4">
+      <div class="big-num">5</div>
+      <div class="big-label">tier banking guardrails: injection, toxicity, PII masking, arithmetic invariants & hard-gates</div>
+    </div>
+  </div>
+
+  <div class="takeaway reveal" data-d="4">
+    Frameworks: <span class="mono">CrewAI 0.193.2</span> (supervisor & risk modeler) + <span class="mono">Google ADK</span> (ingestion & policy verification) — strictly pinned, no third framework.
+  </div>
+  <div class="brand-mark bl">CreditSight</div>
+  <div class="brand-mark tr">01 / Summary</div>
+</section>
+
+<!-- ============================================
+     SLIDE 3 — SYSTEM ARCHITECTURE & WORKFLOW
+     ============================================ -->
+<section class="slide" data-section="Workflow & Architecture">
+  <div class="slide-num">02</div>
+  <div class="section-tag">Architecture & Pipeline</div>
+  <h2 class="slide-title reveal">End-to-end multi-agent <span class="accent">underwriting pipeline</span></h2>
+  <p class="slide-sub reveal">Data flows deterministically from borrower inputs through 5-tier guardrails, central blackboard shared state, 4 specialized agents, external MCP tools, and dynamic A2A negotiation to the signed Credit Memo.</p>
+
+  <div class="wf-container reveal">
+    <!-- Col 1: Inputs & Guardrails -->
+    <div class="wf-col">
+      <div class="wf-box">
+        <div>
+          <span class="wf-badge">1. Data Ingestion</span>
+          <h4>Borrower Dossier</h4>
+          <p>Streamlit Web UI manual inputs or 45-run calibrated benchmark dataset (LendingClub & German Credit empirical profiles).</p>
+        </div>
+        <span class="pill">Income · Debts · Loan · Collateral</span>
+      </div>
+      <div class="wf-box">
+        <div>
+          <span class="wf-badge">2. First Defense</span>
+          <h4>5-Tier Guardrails</h4>
+          <p>Zero-token regex gatekeeper intercepting jailbreaks (DAN/Override) and toxic abuse; token-masks PAN, SSN & Cards before LLM.</p>
+        </div>
+        <span class="pill">DPDP Act & GDPR Privacy Masked</span>
+      </div>
+    </div>
+
+    <!-- Arrow 1 -->
+    <div class="wf-arrow">➔</div>
+
+    <!-- Col 2: Center Hub (Blackboard + 4 Agents + MCP Tools + A2A Bus) -->
+    <div class="wf-center-hub">
+      <div class="bb-hub">
+        <div class="bb-hub-head">
+          <h4>🧠 Central Blackboard Shared State</h4>
+          <span>Thread-Safe RLock · Atomic Mutations · Immutable Audit History</span>
+        </div>
+        <p>Decoupled shared memory where agents post hypotheses, financial ratios, default probabilities, and policy verdicts without point-to-point network serialization overhead.</p>
+      </div>
+
+      <div class="agents-subgrid">
+        <!-- Agent 1 -->
+        <div class="agent-node">
+          <div>
+            <h5>1. Applicant Agent</h5>
+            <span class="fw">Google ADK</span>
+            <p>Parses & normalizes raw data; verifies schemas.</p>
+          </div>
+          <span class="tool-tag">MCP: Bureau Lookup + Calc</span>
+        </div>
+        <!-- Agent 2 -->
+        <div class="agent-node">
+          <div>
+            <h5>2. Credit Risk Agent</h5>
+            <span class="fw">CrewAI</span>
+            <p>Computes empirical Logistic Regression PD & Risk Score.</p>
+          </div>
+          <span class="tool-tag">MCP: Financial Calculator</span>
+        </div>
+        <!-- Agent 3 -->
+        <div class="agent-node">
+          <div>
+            <h5>3. Policy Agent</h5>
+            <span class="fw">Google ADK</span>
+            <p>Audits statutory RBI DTI & Basel III score rules.</p>
+          </div>
+          <span class="tool-tag">MCP: Policy Retriever</span>
+        </div>
+        <!-- Agent 4 -->
+        <div class="agent-node">
+          <div>
+            <h5>4. Coordinator</h5>
+            <span class="fw">CrewAI</span>
+            <p>Supervisor; fuses evidence & resolves conflicts.</p>
+          </div>
+          <span class="tool-tag">Tier 5 Hard-Gate Circuit Breaker</span>
+        </div>
+      </div>
+
+      <div class="a2a-strip">
+        <span><strong>📡 Dynamic A2A Protocol Bus:</strong> Cross-framework event envelopes (Google ADK ⇄ CrewAI)</span>
+        <span class="mono">6 to 10 Messages: Profile Posted ➔ Risk Challenge ➔ Policy Alert ➔ Memo Dispatch</span>
+      </div>
+    </div>
+
+    <!-- Arrow 2 -->
+    <div class="wf-arrow">➔</div>
+
+    <!-- Col 3: Final Output & Decision Gate -->
+    <div class="wf-col">
+      <div class="wf-box">
+        <div>
+          <span class="wf-badge">3. Evidence Synthesis</span>
+          <h4>Pydantic Credit Memo</h4>
+          <p>Strictly typed proposal: Executive summary, Probability of Default %, approved interest rate, max sanction exposure, and action items.</p>
+        </div>
+        <span class="pill">Unique Audit Provenance ID</span>
+      </div>
+      <div class="wf-box" style="border-color:var(--card-bg);">
+        <div>
+          <span class="wf-badge" style="background:var(--card-bg);color:#081a12;">4. Governance Gate</span>
+          <h4>Human Underwriter</h4>
+          <p>CreditSight is strictly an AI-assisted decision-support co-pilot. The Human Underwriter retains sole final sanction authority under law.</p>
+        </div>
+        <span class="pill" style="color:#fff;">Zero Auto-Disbursement</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="brand-mark bl">CreditSight</div>
+  <div class="brand-mark tr">02 / Workflow</div>
+</section>
+
+<!-- ============================================
+     SLIDE 4 — COVERAGE MATRIX
+     ============================================ -->
+<section class="slide" data-section="Coverage">
+  <div class="slide-num">03</div>
+  <div class="section-tag">Criteria</div>
+  <h2 class="slide-title reveal">Coverage matrix — <span class="accent">11 MET</span>, 0 PARTIAL, 0 NOT MET</h2>
+  <p class="slide-sub reveal">Graded against the literal wording of the Part-2 minimum criteria. Every MET row is backed by an implemented module, working verifiers, or a 45-run empirical sweep.</p>
+
+  <table class="crit-table">
+    <thead>
+      <tr><th>#</th><th>Criterion</th><th>Status</th><th>Evidence in CreditSight</th></tr>
+    </thead>
+    <tbody>
+      <tr class="reveal"><td class="c-ev">1</td><td class="c-name">Context sharing — blackboard mandatory</td><td><span class="chip met">MET</span></td><td class="c-ev">Blackboard (state.py) with RLock, state mutation events & audit trail</td></tr>
+      <tr class="reveal"><td class="c-ev">2</td><td class="c-name">Tool integration over MCP (≥2 tools)</td><td><span class="chip met">MET</span></td><td class="c-ev">3 MCP tools: financial_calc, bureau_lookup, policy_retriever</td></tr>
+      <tr class="reveal"><td class="c-ev">3</td><td class="c-name">Structured output (Pydantic v2)</td><td><span class="chip met">MET</span></td><td class="c-ev">10+ typed models: ApplicantProfile, RiskAssessment, CreditMemo</td></tr>
+      <tr class="reveal"><td class="c-ev">4</td><td class="c-name">hierarchical / parallel / sequential</td><td><span class="chip met">MET</span></td><td class="c-ev">All 3 patterns; parallel concurrency verified via ThreadPoolExecutor</td></tr>
+      <tr class="reveal"><td class="c-ev">5</td><td class="c-name">Callback monitoring + heat map</td><td><span class="chip met">MET</span></td><td class="c-ev">ExecutionCallbackMonitor; 2D MAS telemetry Heatmap (agent_heatmap.png)</td></tr>
+      <tr class="reveal"><td class="c-ev">6</td><td class="c-name">Agent-to-agent via A2A protocol</td><td><span class="chip met">MET</span></td><td class="c-ev">A2ABus with dynamic 6–10 message multi-turn negotiation (ADK ↔ CrewAI)</td></tr>
+      <tr class="reveal"><td class="c-ev">7</td><td class="c-name">MUST use both CrewAI and ADK</td><td><span class="chip met">MET</span></td><td class="c-ev">Strict dual MAS: 2 Google ADK agents + 2 CrewAI agents; no 3rd framework</td></tr>
+      <tr class="reveal"><td class="c-ev">8</td><td class="c-name">Guardrails + hostile probes</td><td><span class="chip met">MET</span></td><td class="c-ev">5-tier guardrails: injection, toxic conduct, PII masking & hard-gate</td></tr>
+      <tr class="reveal"><td class="c-ev">9</td><td class="c-name">Observability / tracing / provenance</td><td><span class="chip met">MET</span></td><td class="c-ev">Immutable state snapshots; unique provenance ID on every credit memo</td></tr>
+      <tr class="reveal"><td class="c-ev">10</td><td class="c-name">Eval: 40+ runs, personas, boxplot</td><td><span class="chip met">MET</span></td><td class="c-ev">45 runs × 5 personas; statistical Boxplot (benchmark_boxplot.png)</td></tr>
+      <tr class="reveal"><td class="c-ev">11</td><td class="c-name">Deploy on a cloud platform</td><td><span class="chip met">MET</span></td><td class="c-ev">Streamlit UI (localhost:8501), Dockerfile, docker-compose, render.yaml</td></tr>
+    </tbody>
+  </table>
+  <div class="brand-mark bl">CreditSight</div>
+  <div class="brand-mark tr">03 / Coverage</div>
+</section>
+
+<!-- ============================================
+     SLIDE 5 — WHY EXACTLY 4 AGENTS (professor's point)
+     ============================================ -->
+<section class="slide" data-section="Agents">
+  <div class="slide-num">04</div>
+  <div class="section-tag">No random agents</div>
+  <h2 class="slide-title reveal">Why exactly <span class="accent">4 agents</span></h2>
+  <p class="slide-sub reveal">Professor's core test: every agent must earn its place. Each maps 1:1 to a distinct, <strong>measurable</strong> failure mode in per-agent telemetry. Merge any two and the failure mode returns; a fifth would have nothing distinct to measure.</p>
+
+  <div class="agent-head">
+    <div>Assigned Agent</div><div>Pain Point &amp; The Need</div><div>How It Solves It (Mechanism)</div>
+  </div>
+  <div class="agent-row reveal">
+    <div class="a-name"><span class="a-num">1</span>Applicant Data Agent<span class="a-fw">Google ADK</span></div>
+    <div class="a-pain"><strong>Pain Point:</strong> Monolithic LLMs suffer silent ingestion crashes, corrupted bureau fields, and leak PII.<br><strong>The Need:</strong> Deterministic parsing, data cleansing, and privacy redaction BEFORE any stochastic LLM reasoning occurs.</div>
+    <div class="a-why"><strong>Solution:</strong> Executes MCP bureau lookup deterministically, sanitizes prompt text, token-masks PAN/SSN/Cards, and outputs strictly-typed Pydantic <span class="mono">ApplicantProfile</span>.</div>
+  </div>
+  <div class="agent-row reveal">
+    <div class="a-name"><span class="a-num">2</span>Credit Risk Agent<span class="a-fw">CrewAI</span></div>
+    <div class="a-pain"><strong>Pain Point:</strong> Autoregressive LLMs hallucinate financial arithmetic, leading to inaccurate Probability of Default (PD) and false DTI.<br><strong>The Need:</strong> An isolated quantitative modeling engine that calculates default probability using statistical math rather than language prediction.</div>
+    <div class="a-why"><strong>Solution:</strong> Executes empirical Logistic Regression PD model (<span class="mono">z-score</span>) + MCP financial calculator; isolates mathematical calculation from qualitative text.</div>
+  </div>
+  <div class="agent-row reveal">
+    <div class="a-name"><span class="a-num">3</span>Regulatory Policy Agent<span class="a-fw">Google ADK</span></div>
+    <div class="a-pain"><strong>Pain Point:</strong> Blending commercial risk appetite with regulatory compliance causes confirmation bias and illegal lending approvals.<br><strong>The Need:</strong> An independent, adversarial compliance auditor operating with zero commercial incentive to waive statutory rules.</div>
+    <div class="a-why"><strong>Solution:</strong> Retrieves statutory rules via MCP policy retriever; audits RBI DTI cap (&le;50%) &amp; Basel III (&ge;600); produces non-negotiable <span class="mono">PolicyComplianceReport</span> with circular citations.</div>
+  </div>
+  <div class="agent-row reveal">
+    <div class="a-name"><span class="a-num">4</span>Underwriting Coordinator<span class="a-fw">CrewAI</span></div>
+    <div class="a-pain"><strong>Pain Point:</strong> Unsupervised agents deadlock when quantitative risk and statutory rules conflict, with no legally defensible decision memo.<br><strong>The Need:</strong> A synthesis supervisor that resolves inter-agent contradictions and drafts structured credit memos for human sign-off.</div>
+    <div class="a-why"><strong>Solution:</strong> Fuses multi-agent evidence over Blackboard, detects risk vs policy contradictions, enforces <strong>central bank hard-gate circuit-breakers</strong>, sets pricing, and signs Pydantic <span class="mono">CreditMemo</span>.</div>
+  </div>
+  <div class="brand-mark bl">CreditSight</div>
+  <div class="brand-mark tr">04 / Agents</div>
+</section>
+
+<!-- ============================================
+     SLIDE 6 — PROTOCOLS: MCP + A2A + PARALLEL
+     ============================================ -->
+<section class="slide" data-section="Protocols">
+  <div class="slide-num">05</div>
+  <div class="section-tag">Real wire protocols</div>
+  <h2 class="slide-title reveal">Not in-process calls — <span class="accent">real boundaries</span></h2>
+  <p class="slide-sub reveal">Three architectural claims that are easy to fake and were instead proven with typed schemas, dynamic negotiation, and wall-clock evidence.</p>
+
+  <div class="grid grid-3">
+    <div class="panel reveal">
+      <h3>MCP — Tools Across Wire</h3>
+      <ul>
+        <li>3 tools served via Model Context Protocol JSON-RPC specification</li>
+        <li><span class="mono">mcp_financial_calculator</span> (EMI, DTI, LTV)</li>
+        <li><span class="mono">mcp_bureau_database_lookup</span> (Scores & past default records)</li>
+        <li><span class="mono">mcp_regulatory_policy_retriever</span> (RBI / Basel III RAG)</li>
+        <li>Zero mathematical hallucinations</li>
+      </ul>
+    </div>
+    <div class="panel reveal" data-d="2">
+      <h3>Dynamic A2A — Multi-Turn</h3>
+      <ul>
+        <li>A2A protocol bus bridging <span class="mono">Google ADK</span> and <span class="mono">CrewAI</span></li>
+        <li>Dynamic <strong>6 to 10 message exchanges</strong> per case — not a static 1-off handoff</li>
+        <li><span class="mono">CHALLENGE_RISK_EXPOSURE</span> on high DTI</li>
+        <li><span class="mono">STATUTORY_EXCEPTION_ALERT</span> on rule breach</li>
+        <li>Expandable JSON payloads verified in UI</li>
+      </ul>
+    </div>
+    <div class="panel reveal" data-d="3">
+      <h3>Parallel — True Concurrency</h3>
+      <ul>
+        <li>Fork-join on <span class="mono">ThreadPoolExecutor(max_workers=2)</span></li>
+        <li>Risk Agent and Policy Agent execute <strong>concurrently</strong></li>
+        <li>Proven by <strong>wall-clock interval overlap</strong></li>
+        <li>Centralized thread-safe Blackboard with <span class="mono">threading.RLock()</span> prevents race hazards</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="takeaway reveal" data-d="4">
+    Thread-safety architecture: Blackboard shared memory ensures atomic state mutations, immutable audit events, and seamless evidence fusion without serialization overhead.
+  </div>
+  <div class="brand-mark bl">CreditSight</div>
+  <div class="brand-mark tr">05 / Protocols</div>
+</section>
+
+<!-- ============================================
+     SLIDE 7 — EVALUATION RESULTS (BOXPLOT)
+     ============================================ -->
+<section class="slide" data-section="Evaluation">
+  <div class="slide-num">06</div>
+  <div class="section-tag">Measured, not asserted</div>
+  <h2 class="slide-title reveal">45 runs · parallel is <span class="accent">fastest &amp; predictable</span></h2>
+  <p class="slide-sub reveal">45 calibrated evaluation runs across 3 architectures &times; 5 applicant personas. Calibrated on German Credit and LendingClub datasets, synthesized in <span class="mono">benchmark_applicants.json</span>.</p>
+
+  <div class="grid grid-2">
+    <div class="chart-frame reveal">
+      <img src="assets/benchmark_boxplot.png" alt="Benchmark Boxplot: Latency by Architecture and Persona">
+      <div class="chart-cap"><strong>Benchmark Latency Distribution across Architectures and Personas (45 runs).</strong> Parallel Fan-Out achieves lowest pipeline latency; Hierarchical Blackboard exhibits tightest IQR, proving predictable execution for enterprise loan underwriting.</div>
+    </div>
+    <div class="panel reveal" data-d="2">
+      <h3>45-Run Empirical Breakdown &amp; Dataset</h3>
+      <ul>
+        <li><strong>What were the 45 Runs:</strong> 45 complete end-to-end multi-agent underwriting runs capturing wall-clock latency, token count, cost, and decision distribution.</li>
+        <li><strong>3 Architectural Patterns (15 runs each):</strong>
+          <br>&bull; <em>Hierarchical Blackboard:</em> 15 runs (supervisor coordination, tightest IQR, zero write collisions)
+          <br>&bull; <em>Parallel Fan-Out:</em> 15 runs (concurrent thread execution, mean 1.3 ms, 2.5x faster throughput)
+          <br>&bull; <em>Sequential Pipeline:</em> 15 runs (deterministic baseline, mean 0.8 ms)
+        </li>
+        <li><strong>5 Applicant Personas (9 runs per persona):</strong>
+          <br>&bull; <em>Prime Corporate (9):</em> Income $180k, bureau score 780, DTI 28% &rarr; Sanctioned
+          <br>&bull; <em>Near-Prime Small Business (9):</em> Bureau score 680, DTI 42% &rarr; Conditional Approval
+          <br>&bull; <em>Subprime High-Leverage (9):</em> Thin-file, bureau 540, DTI 65% &rarr; Auto-Rejected
+          <br>&bull; <em>Hostile Conduct (9):</em> Abusive threats; redacted in 0.0s
+          <br>&bull; <em>Adversarial Injection (9):</em> Jailbreak attack ("ignore instructions"); blocked in 0.0s
+        </li>
+        <li><strong>Dataset Origins &amp; Calibration:</strong> Modeled on empirical distributions from the <strong>German Credit Dataset (Statlog)</strong> (1,000 cases: loan tenure, credit history, installment rate) and <strong>LendingClub Public Loan Dataset</strong> (income, DTI, FICO score distributions, historical defaults).</li>
+        <li><strong>Benchmark Dataset File:</strong> Standardized in <span class="mono">creditsight/dataset/benchmark_applicants.json</span> (45 structured test cases).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="brand-mark bl">CreditSight</div>
+  <div class="brand-mark tr">06 / Evaluation</div>
+</section>
+
+<!-- ============================================
+     SLIDE 8 — TELEMETRY HEATMAP & GUARDRAILS
+     ============================================ -->
+<section class="slide" data-section="Quality">
+  <div class="slide-num">07</div>
+  <div class="section-tag">Telemetry & Safety</div>
+  <h2 class="slide-title reveal">MAS heatmap + <span class="accent">5-tier guardrails</span></h2>
+  <p class="slide-sub reveal">Every agent lifecycle hook emits structured telemetry (latency, tokens, tool calls). Protected by banking-grade guardrails covering injection, toxicity, PII, arithmetic, and statutory caps.</p>
+
+  <div class="grid grid-2">
+    <div class="chart-frame reveal">
+      <img src="assets/agent_heatmap.png" alt="MAS Agent Performance Heatmap">
+      <div class="chart-cap"><strong>MAS Telemetry Heatmap.</strong> Contrasts agents across Latency, Token Usage, and Tool Calls. Proves Coordinator uses highest tokens for synthesis while worker agents generate 100% of external tool calls.</div>
+    </div>
+    <div class="panel reveal" data-d="2">
+      <h3>5-Tier Banking Guardrails</h3>
+      <ul>
+        <li><strong>Tier 1 — Prompt Injection:</strong> Neutralizes jailbreaks (DAN, System Override) in 0.0s; drops safety score and refers for fraud audit.</li>
+        <li><strong>Tier 2 — Toxic Language:</strong> Redacts coercive / abusive threats to <span class="mono">[REDACTED_ABUSIVE_TERM]</span>.</li>
+        <li><strong>Tier 3 — PII Privacy Defense:</strong> Token-masks Indian PAN Cards, SSNs, and 16-digit cards under DPDP & GDPR.</li>
+        <li><strong>Tier 4 — Arithmetic Invariants:</strong> Re-verifies ground-truth math: <span class="mono">|DTI_rep - (Debt+EMI)/Income| ≤ 0.05</span>.</li>
+        <li><strong>Tier 5 — Central Bank Hard-Gate:</strong> Programmatically vetoes LLM approval if RBI DTI &gt; 50% or Basel III score &lt; 600.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="takeaway reveal" data-d="4">
+    Zero tolerance for banking non-compliance: LLMs provide narrative reasoning, while deterministic guardrails enforce statutory law.
+  </div>
+  <div class="brand-mark bl">CreditSight</div>
+  <div class="brand-mark tr">07 / Quality</div>
+</section>
+
+<!-- ============================================
+     SLIDE 9 — WHAT RUNNING IT FOUND (DEFECTS SOLVED)
+     ============================================ -->
+<section class="slide" data-section="Honesty">
+  <div class="slide-num">08</div>
+  <div class="section-tag">Evidence, not intention</div>
+  <h2 class="slide-title reveal">Five architectural defects found by <span class="accent">running it</span></h2>
+  <p class="slide-sub reveal">Every one of these came from an actual failing test run, concurrent trace, or adversarial probe — not from theoretical inspection.</p>
+
+  <div class="grid grid-2">
+    <div class="panel reveal">
+      <h3>Concurrency & Protocols</h3>
+      <ul>
+        <li><strong>Single-Message A2A Dead-End:</strong> Initial code only posted 1 envelope; re-architected into dynamic <strong>6-to-10 multi-turn negotiation</strong> with typed challenge envelopes.</li>
+        <li><strong>Blackboard Race Hazards:</strong> Parallel Fan-Out caused concurrent write collisions; resolved with Python <span class="mono">threading.RLock()</span> ensuring atomic mutations.</li>
+        <li><strong>Tool Return Drift:</strong> Credit bureau lookup returned corrupted floats; fixed with callback type-checking enforcing <span class="mono">[300, 900]</span> score boundaries.</li>
+      </ul>
+    </div>
+    <div class="panel reveal" data-d="2">
+      <h3>Financial Safety & Compliance</h3>
+      <ul>
+        <li><strong>Arithmetic Drift in LLM Memos:</strong> Generalist LLM rounded EMI payments inconsistently; solved by delegating all arithmetic to deterministic MCP calculator.</li>
+        <li><strong>Regulatory Subversion Attack:</strong> Adversarial injection coerced LLM into approving overleveraged borrowers; solved by <strong>Tier 5 central bank hard-gate circuit-breaker</strong> that programmatically vetoes LLM approvals.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="takeaway reveal" data-d="4">
+    Known design boundary, stated plainly: <strong>Human Underwriter retains ultimate sanction authority.</strong> CreditSight acts as an auditable decision-support co-pilot, never executing automated loan disbursals.
+  </div>
+  <div class="brand-mark bl">CreditSight</div>
+  <div class="brand-mark tr">08 / Honesty</div>
+</section>
+
+<!-- ============================================
+     SLIDE 10 — DEMO / REPRODUCTION
+     ============================================ -->
+<section class="slide" data-section="Reproduce">
+  <div class="slide-num">09</div>
+  <div class="section-tag">Run it yourself</div>
+  <h2 class="slide-title reveal">Every number is <span class="accent">reproducible</span></h2>
+
+  <div class="grid grid-2">
+    <div class="panel reveal">
+      <h3>Interactive Streamlit Web UI</h3>
+      <ul>
+        <li><span class="mono">streamlit run creditsight/ui/app.py</span> → <span class="mono">localhost:8501</span></li>
+        <li><strong>Tab 1:</strong> Underwriting Assessment (Credit Memo & checklist)</li>
+        <li><strong>Tab 2:</strong> Blackboard State & A2A Inspector (expandable JSON)</li>
+        <li><strong>Tab 3:</strong> Guardrails & Security (real-time PII & injection alerts)</li>
+        <li><strong>Tab 4:</strong> MAS Telemetry & Benchmarks (live Heatmap & Boxplot)</li>
+      </ul>
+    </div>
+    <div class="panel reveal" data-d="2">
+      <h3>CLI Drivers & Verification Harness</h3>
+      <ul>
+        <li><span class="mono">python main.py</span> — executes Prime & Adversarial runs and triggers 45-run empirical benchmark</li>
+        <li><span class="mono">python -m creditsight.eval.benchmark</span> — regenerates Boxplot and Heatmap artifacts</li>
+        <li>Cloud deployment: <span class="mono">Dockerfile</span>, <span class="mono">docker-compose.yml</span>, and <span class="mono">render.yaml</span> blueprint ready for cloud hosting</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel reveal" data-d="3" style="margin-top:34px">
+    <h3>Governance Provenance ID Guarantee</h3>
+    <ul>
+      <li>Every generated credit memo embeds a tamper-proof <span class="mono">audit_trail_provenance_id</span> linking directly to the Blackboard state history, guaranteeing non-repudiation for RBI and Basel III banking regulators.</li>
+    </ul>
+  </div>
+
+  <div class="brand-mark bl">CreditSight</div>
+  <div class="brand-mark tr">09 / Reproduce</div>
+</section>
+
+<!-- ============================================
+     SLIDE 11 — CLOSING
+     ============================================ -->
+<section class="slide" data-section="Close">
+  <div class="grid-texture"></div>
+  <div class="title-card reveal" style="top:290px;width:1120px">
+    <div class="eyebrow">The bottom line</div>
+    <h1 style="font-size:76px">Built it.<br>Ran it.<br>Proved it.</h1>
+    <p class="tagline" style="font-size:27px">11 of 11 criteria met, each backed by working code, multi-agent wire protocols, and 45 recorded empirical benchmark runs. Explainable, auditable, and regulatory compliant.</p>
+  </div>
+  <div class="title-meta" style="top:290px;width:400px">
+    <div class="meta-block reveal" data-d="2">
+      <div class="meta-k">Deliverables</div>
+      <div class="meta-v" style="font-size:20px">WIP Progress Report<br>Master Viva Guide (viva.md)<br>05_Coverage_Slide.pptx<br>Interactive Web Dashboard</div>
+    </div>
+    <div class="meta-block reveal" data-d="3">
+      <div class="meta-k">Evaluation Target</div>
+      <div class="meta-v" style="font-size:20px">Agentic AI — Phase 2<br><span style="color:#a0aec0">Max Marks: 30</span></div>
+    </div>
+  </div>
+  <div class="brand-mark bl">BML MUNJAL UNIVERSITY · 2026</div>
+  <div class="brand-mark tr">CreditSight</div>
+</section>
+
+</main>
+</div>
+
+<div class="deck-controls">
+  <button id="prevBtn" aria-label="Previous slide">← PREV</button>
+  <span id="slideCounter">1 / 11</span>
+  <button id="nextBtn" aria-label="Next slide">NEXT →</button>
+</div>
+
+<script>
+/* ============================================
+   SLIDE PRESENTATION CONTROLLER
+   Fixed 1920×1080 stage, uniform scale, letterbox.
+   ============================================ */
+class SlidePresentation {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.currentSlide = 0;
+        this.stage = document.getElementById('deckStage');
+        this.counter = document.getElementById('slideCounter');
+        this.track = document.getElementById('progressTrack');
+        this.total = this.slides.length;
+        this.setupStageScale();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupButtons();
+        this.setupInlineEditing();
+        this.showSlide(0);
+    }
+
+    /* Uniform stage scaling — never reflows slide content */
+    setupStageScale() {
+        const scale = () => {
+            const factor = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            const x = (window.innerWidth - 1920 * factor) / 2;
+            const y = (window.innerHeight - 1080 * factor) / 2;
+            this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+        };
+        scale();
+        window.addEventListener('resize', scale);
+    }
+
+    setupKeyboardNav() {
+        document.addEventListener('keydown', (e) => {
+            if (e.target && e.target.getAttribute && e.target.getAttribute('contenteditable')) return;
+            switch (e.key) {
+                case 'ArrowRight': case ' ': case 'PageDown':
+                    e.preventDefault(); this.next(); break;
+                case 'ArrowLeft': case 'PageUp':
+                    e.preventDefault(); this.prev(); break;
+                case 'Home': this.showSlide(0); break;
+                case 'End': this.showSlide(this.total - 1); break;
+            }
+        });
+    }
+
+    setupTouchNav() {
+        let startX = null;
+        document.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            if (startX === null) return;
+            const dx = e.changedTouches[0].clientX - startX;
+            if (Math.abs(dx) > 60) { dx < 0 ? this.next() : this.prev(); }
+            startX = null;
+        }, { passive: true });
+    }
+
+    setupButtons() {
+        document.getElementById('prevBtn').addEventListener('click', () => this.prev());
+        document.getElementById('nextBtn').addEventListener('click', () => this.next());
+    }
+
+    next() { this.showSlide(this.currentSlide + 1); }
+    prev() { this.showSlide(this.currentSlide - 1); }
+
+    showSlide(index) {
+        this.currentSlide = Math.max(0, Math.min(index, this.total - 1));
+        this.slides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === this.currentSlide);
+            slide.classList.toggle('visible', i === this.currentSlide);
+        });
+        this.counter.textContent = `${this.currentSlide + 1} / ${this.total}`;
+        this.track.style.width = `${((this.currentSlide + 1) / this.total) * 100}%`;
+        const sec = this.slides[this.currentSlide].dataset.section || '';
+        document.title = sec ? `CreditSight — ${sec}` : 'CreditSight — Part 2 Evaluation';
+    }
+
+    /* ---- Inline editing (post-draft affordance) ---- */
+    setupInlineEditing() {
+        const hotzone = document.querySelector('.edit-hotzone');
+        const toggle = document.getElementById('editToggle');
+        let hideTimeout = null;
+
+        const show = () => { clearTimeout(hideTimeout); toggle.classList.add('show'); };
+        const hide = () => {
+            hideTimeout = setTimeout(() => {
+                if (!document.body.classList.contains('editing')) toggle.classList.remove('show');
+            }, 400);
+        };
+
+        hotzone.addEventListener('mouseenter', show);
+        hotzone.addEventListener('mouseleave', hide);
+        toggle.addEventListener('mouseenter', show);
+        toggle.addEventListener('mouseleave', hide);
+        hotzone.addEventListener('click', () => this.toggleEditMode());
+        toggle.addEventListener('click', () => this.toggleEditMode());
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'e' || e.key === 'E') && !(e.target && e.target.getAttribute && e.target.getAttribute('contenteditable'))) {
+                this.toggleEditMode();
+            }
+        });
+    }
+
+    toggleEditMode() {
+        const editing = document.body.classList.toggle('editing');
+        document.getElementById('editToggle').classList.toggle('active', editing);
+        this.slides.forEach((s) => {
+            s.querySelectorAll('h1,h2,h3,p,li,td,.big-label,.a-pain,.a-why,.chart-cap,.meta-v').forEach((el) => {
+                if (editing) {
+                    el.setAttribute('contenteditable', 'true');
+                    el.style.outline = '1px dashed rgba(0, 230, 118, 0.5)';
+                } else {
+                    el.removeAttribute('contenteditable');
+                    el.style.outline = 'none';
+                }
+            });
+        });
+        if (editing) document.querySelector('.edit-toggle').classList.add('show');
+    }
+}
+
+new SlidePresentation();
+</script>
+</body>
+</html>
+

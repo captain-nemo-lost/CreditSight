@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VidhanAI — Agentic AI Part 2 Evaluation</title>
+
+<!-- Fonts: Archivo Black (display) + Space Grotesk (body) from Google -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================
+   THEME — Bold Signal: dark, confident, high-impact
+   Colors: near-black gradient base + orange focal card
+   ============================================ */
+:root {
+    /* Surfaces */
+    --bg-primary: #1a1a1a;
+    --bg-gradient: linear-gradient(135deg, #141414 0%, #2b2b2b 48%, #141414 100%);
+    --slide-bg: #141414;
+    --stage-bg: #000;
+    --card-bg: #FF5722;              /* the orange focal card */
+    --card-bg-dim: #d84315;
+    --panel-bg: rgba(255, 255, 255, 0.04);
+    --panel-border: rgba(255, 255, 255, 0.10);
+
+    /* Text */
+    --text-primary: #ffffff;
+    --text-on-card: #141414;
+    --text-secondary: #a3a3a3;
+    --text-muted: #6b6b6b;
+
+    /* Status colors */
+    --met: #35c46b;
+    --partial: #f2a93b;
+    --notmet: #e5484d;
+
+    /* Typography — authored at the 1920×1080 stage size */
+    --font-display: 'Archivo Black', sans-serif;
+    --font-body: 'Space Grotesk', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --title-size: 92px;
+    --h2-size: 54px;
+    --body-size: 26px;
+    --small-size: 20px;
+
+    /* Spacing */
+    --slide-padding: 84px;
+    --content-gap: 40px;
+
+    /* Motion */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-normal: 0.65s;
+}
+
+/* ============================================
+   BASE — includes the mandatory fixed-stage CSS
+   ============================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--stage-bg);
+}
+
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg);
+}
+
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg);
+}
+
+.slide {
+    position: absolute;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg);
+}
+
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+
+.deck-controls {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+@media print {
+    html, body { width: 1920px; height: auto; overflow: visible; background: #fff; }
+    .deck-viewport { position: static; overflow: visible; background: #fff; }
+    .deck-stage { position: static; width: auto; height: auto; transform: none !important; background: none; }
+    .slide {
+        position: relative;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto;
+        width: 1920px;
+        height: 1080px;
+        break-after: page;
+        page-break-after: always;
+    }
+    .slide:last-child { break-after: auto; page-break-after: auto; }
+    .deck-controls { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ============================================
+   SHARED SLIDE GRAMMAR — Bold Signal layout system
+   Every content slide: number top-left, nav top-right,
+   title bottom-left of the header band, content grid below.
+   ============================================ */
+.slide {
+    background: var(--bg-gradient);
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    padding: var(--slide-padding);
+    display: block;
+}
+
+/* Corner brand marks */
+.brand-mark {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    z-index: 5;
+}
+.brand-mark.tr { top: 34px; right: 84px; }
+.brand-mark.bl { bottom: 30px; left: 84px; }
+
+/* Slide number — the big Bold Signal numeral */
+.slide-num {
+    position: absolute;
+    top: 26px;
+    left: 84px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.22em;
+    color: var(--card-bg);
+    z-index: 5;
+}
+
+/* Section tag (nav breadcrumb) */
+.section-tag {
+    position: absolute;
+    top: 22px;
+    left: 180px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    z-index: 5;
+}
+
+/* Titles */
+.slide-title {
+    font-family: var(--font-display);
+    font-size: var(--h2-size);
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    margin: 42px 0 8px;
+    color: var(--text-primary);
+}
+.slide-title .accent { color: var(--card-bg); }
+.slide-sub {
+    font-size: var(--body-size);
+    color: var(--text-secondary);
+    max-width: 1250px;
+    line-height: 1.45;
+    margin-bottom: 34px;
+}
+
+/* Reveal-on-enter animations */
+.reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity var(--duration-normal) var(--ease-out-expo),
+                transform var(--duration-normal) var(--ease-out-expo);
+}
+.slide.visible .reveal { opacity: 1; transform: translateY(0); }
+.slide.visible .reveal:nth-child(1) { transition-delay: 0.05s; }
+.slide.visible .reveal:nth-child(2) { transition-delay: 0.13s; }
+.slide.visible .reveal:nth-child(3) { transition-delay: 0.21s; }
+.slide.visible .reveal:nth-child(4) { transition-delay: 0.29s; }
+.slide.visible .reveal:nth-child(5) { transition-delay: 0.37s; }
+.slide.visible .reveal:nth-child(6) { transition-delay: 0.45s; }
+.reveal[data-d="2"] { transition-delay: 0.2s !important; }
+.reveal[data-d="3"] { transition-delay: 0.35s !important; }
+.reveal[data-d="4"] { transition-delay: 0.5s !important; }
+
+/* ============================================
+   TITLE SLIDE — the orange focal card
+   ============================================ */
+.title-card {
+    position: absolute;
+    left: 84px;
+    top: 168px;
+    width: 1290px;
+    background: var(--card-bg);
+    color: var(--text-on-card);
+    padding: 74px 84px 70px;
+    box-shadow: 0 30px 80px rgba(255, 87, 34, 0.22);
+}
+.title-card .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    margin-bottom: 26px;
+    opacity: 0.85;
+}
+.title-card h1 {
+    font-family: var(--font-display);
+    font-size: 118px;
+    line-height: 0.94;
+    letter-spacing: -0.02em;
+    margin-bottom: 26px;
+}
+.title-card .tagline {
+    font-size: 30px;
+    font-weight: 500;
+    line-height: 1.3;
+    max-width: 900px;
+}
+.title-meta {
+    position: absolute;
+    right: 84px;
+    top: 168px;
+    width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+}
+.title-meta .meta-block {
+    border-top: 2px solid var(--panel-border);
+    padding-top: 18px;
+}
+.title-meta .meta-k {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+.title-meta .meta-v {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.35;
+}
+
+/* ============================================
+   GENERIC GRID + CARD COMPONENTS
+   ============================================ */
+.grid { display: grid; gap: var(--content-gap); }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+.panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    padding: 34px 38px;
+}
+.panel h3 {
+    font-family: var(--font-body);
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+.panel .big-num {
+    font-family: var(--font-display);
+    font-size: 76px;
+    line-height: 1;
+    color: var(--card-bg);
+}
+.panel .big-label {
+    font-size: 21px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    line-height: 1.4;
+}
+.panel ul { list-style: none; }
+.panel li {
+    font-size: 23px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    padding-left: 28px;
+    position: relative;
+    margin-bottom: 14px;
+}
+.panel li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--card-bg);
+    font-weight: 700;
+}
+.panel li strong { color: #fff; }
+.panel li .mono { font-family: var(--font-mono); font-size: 0.92em; color: var(--card-bg); }
+
+/* Status chips */
+.chip {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+.chip.met { background: rgba(53, 196, 107, 0.16); color: var(--met); border: 1px solid rgba(53, 196, 107, 0.4); }
+.chip.partial { background: rgba(242, 169, 59, 0.16); color: var(--partial); border: 1px solid rgba(242, 169, 59, 0.4); }
+
+/* Criteria table */
+.crit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 21px;
+}
+.crit-table th {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 2px solid var(--panel-border);
+}
+.crit-table td {
+    padding: 15px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    line-height: 1.45;
+    vertical-align: top;
+}
+.crit-table td.c-name { color: var(--text-primary); font-weight: 500; width: 34%; }
+.crit-table td.c-ev { font-family: var(--font-mono); font-size: 18px; color: var(--text-primary); }
+.crit-table tr:last-child td { border-bottom: none; }
+
+/* Agent rows (the "no random agents" table) */
+.agent-row {
+    display: grid;
+    grid-template-columns: 300px 1fr 1fr;
+    gap: 30px;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    align-items: start;
+}
+.agent-row:last-child { border-bottom: none; }
+.agent-row .a-name {
+    font-size: 23px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+}
+.agent-row .a-name .a-num {
+    font-family: var(--font-display);
+    color: var(--card-bg);
+    margin-right: 12px;
+}
+.agent-row .a-pain, .agent-row .a-why {
+    font-size: 20px;
+    line-height: 1.45;
+    color: var(--text-secondary);
+}
+.agent-row .a-pain strong, .agent-row .a-why strong { color: #fff; }
+.agent-head {
+    display: grid;
+    grid-template-columns: 300px 1fr 1fr;
+    gap: 30px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--panel-border);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* Chart slide */
+.chart-frame {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    padding: 26px 30px;
+    display: flex;
+    flex-direction: column;
+}
+.chart-frame img {
+    width: 100%;
+    height: 560px;
+    object-fit: contain;
+    background: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.chart-frame .chart-cap {
+    font-size: 20px;
+    color: var(--text-secondary);
+    margin-top: 16px;
+    line-height: 1.4;
+}
+.chart-frame .chart-cap strong { color: #fff; }
+
+/* Quote / takeaway strip */
+.takeaway {
+    margin-top: 34px;
+    border-left: 6px solid var(--card-bg);
+    padding: 20px 30px;
+    background: rgba(255, 87, 34, 0.08);
+    font-size: 24px;
+    line-height: 1.5;
+    color: #fff;
+}
+.takeaway .mono { font-family: var(--font-mono); color: var(--card-bg); font-size: 0.92em; }
+
+/* Controls */
+.deck-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #888;
+}
+.deck-controls button {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #ddd;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 7px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    letter-spacing: 0.08em;
+}
+.deck-controls button:hover { background: rgba(255, 87, 34, 0.25); color: #fff; }
+
+/* Progress bar — outside the stage */
+.progress-track {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: var(--card-bg);
+    width: 0;
+    z-index: 1001;
+    transition: width 0.35s var(--ease-out-expo);
+}
+
+/* ============================================
+   INLINE EDITING (post-draft affordance)
+   ============================================ */
+.edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
+.edit-toggle {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 10001;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    font-size: 18px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+
+/* Decorative grid texture for the title slide corner */
+.grid-texture {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 620px;
+    height: 620px;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 52px 52px;
+    pointer-events: none;
+    mask-image: radial-gradient(circle at bottom right, #000 0%, transparent 72%);
+    -webkit-mask-image: radial-gradient(circle at bottom right, #000 0%, transparent 72%);
+}
+</style>
+</head>
+<body>
+
+<div class="progress-track" id="progressTrack"></div>
+<div class="edit-hotzone" title="Edit mode"></div>
+<button class="edit-toggle" id="editToggle" title="Edit mode (E)">✏️</button>
+
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- ============================================
+     SLIDE 1 — TITLE
+     ============================================ -->
+<section class="slide" data-section="VidhanAI · Part 2 Evaluation">
+  <div class="grid-texture"></div>
+  <div class="title-card reveal">
+    <div class="eyebrow">Agentic AI · Evaluation 2</div>
+    <h1>VidhanAI<br>Multi-Agent<br>System</h1>
+    <p class="tagline">A generative-AI legislative simplification engine for Indian parliamentary bills — powered by a 6-agent CrewAI crew, Google ADK, MCP and A2A.</p>
+  </div>
+  <div class="title-meta">
+    <div class="meta-block reveal" data-d="2">
+      <div class="meta-k">Repository</div>
+      <div class="meta-v">github.com/DEATHGATE01/VidhanAi<br><span style="color:#a3a3a3;font-size:19px">branch feature/agentic-eval</span></div>
+    </div>
+    <div class="meta-block reveal" data-d="3">
+      <div class="meta-k">Coverage</div>
+      <div class="meta-v">10 of 11 criteria met<br><span style="color:#a3a3a3;font-size:19px">1 partial (deployment)</span></div>
+    </div>
+    <div class="meta-block reveal" data-d="4">
+      <div class="meta-k">Evaluation evidence</div>
+      <div class="meta-v">50 recorded runs · 5 personas<br><span style="color:#a3a3a3;font-size:19px">verified, not estimated</span></div>
+    </div>
+  </div>
+  <div class="brand-mark bl">DEATHGATE01 · 2026-11-01</div>
+  <div class="brand-mark tr">VidhanAI</div>
+</section>
+
+<!-- ============================================
+     SLIDE 2 — EXECUTIVE SUMMARY
+     ============================================ -->
+<section class="slide" data-section="Summary">
+  <div class="slide-num">01</div>
+  <div class="section-tag">What was built</div>
+  <h2 class="slide-title reveal">From <span class="accent">advertised</span> to actually built</h2>
+  <p class="slide-sub reveal">Last cycle the agentic layer was decoration: CrewAI missing, retrieval index never built, <span class="mono" style="font-family:var(--font-mono);font-size:0.9em">/api/agent/research</span> returning 503. This cycle it was implemented and verified.</p>
+
+  <div class="grid grid-4">
+    <div class="panel reveal">
+      <div class="big-num">6</div>
+      <div class="big-label">real agents over 7 tools, each with a named prompt strategy and a written rationale</div>
+    </div>
+    <div class="panel reveal" data-d="2">
+      <div class="big-num">6</div>
+      <div class="big-label">architectures: sequential, hierarchical, blackboard, parallel, mcp_hybrid, a2a_hybrid</div>
+    </div>
+    <div class="panel reveal" data-d="3">
+      <div class="big-num">50</div>
+      <div class="big-label">recorded eval runs (≥40 required) across 4 architectures × 5 personas</div>
+    </div>
+    <div class="panel reveal" data-d="4">
+      <div class="big-num">4</div>
+      <div class="big-label">one-command verifiers — fork-join overlap, MCP, A2A, eval harness — all PASS</div>
+    </div>
+  </div>
+
+  <div class="takeaway reveal" data-d="4">
+    Frameworks: <span class="mono">CrewAI 0.193.2</span> (crew runtime) + <span class="mono">Google ADK 2.12.0</span> (agent served over A2A) — both pinned, no third framework.
+  </div>
+  <div class="brand-mark bl">VidhanAI</div>
+  <div class="brand-mark tr">01 / Summary</div>
+</section>
+
+<!-- ============================================
+     SLIDE 3 — COVERAGE MATRIX
+     ============================================ -->
+<section class="slide" data-section="Coverage">
+  <div class="slide-num">02</div>
+  <div class="section-tag">Criteria</div>
+  <h2 class="slide-title reveal">Coverage matrix — <span class="accent">10 MET</span>, 1 PARTIAL, 0 NOT MET</h2>
+  <p class="slide-sub reveal">Graded against the literal wording of the Part-2 minimum criteria. Every MET row is backed by a verifier or a recorded run.</p>
+
+  <table class="crit-table">
+    <thead>
+      <tr><th>#</th><th>Criterion</th><th>Status</th><th>Evidence</th></tr>
+    </thead>
+    <tbody>
+      <tr class="reveal"><td class="c-ev">1</td><td class="c-name">Context sharing — blackboard mandatory</td><td><span class="chip met">MET</span></td><td class="c-ev">all 6 archs live</td></tr>
+      <tr class="reveal"><td class="c-ev">2</td><td class="c-name">Tool integration over MCP</td><td><span class="chip met">MET</span></td><td class="c-ev">verify_mcp PASS — distinct PIDs</td></tr>
+      <tr class="reveal"><td class="c-ev">3</td><td class="c-name">Structured output (Pydantic)</td><td><span class="chip met">MET</span></td><td class="c-ev">AnswerEnvelope on every run</td></tr>
+      <tr class="reveal"><td class="c-ev">4</td><td class="c-name">hierarchical / parallel / sequential</td><td><span class="chip met">MET</span></td><td class="c-ev">fork-join overlap proven</td></tr>
+      <tr class="reveal"><td class="c-ev">5</td><td class="c-name">Callback monitoring + heat map</td><td><span class="chip met">MET</span></td><td class="c-ev">24 callback events / parallel run</td></tr>
+      <tr class="reveal"><td class="c-ev">6</td><td class="c-name">Agent-to-agent via A2A</td><td><span class="chip met">MET</span></td><td class="c-ev">ADK card + JSON-RPC PASS</td></tr>
+      <tr class="reveal"><td class="c-ev">7</td><td class="c-name">MUST use CrewAI + ADK</td><td><span class="chip met">MET</span></td><td class="c-ev">both pinned, no other framework</td></tr>
+      <tr class="reveal"><td class="c-ev">8</td><td class="c-name">Guardrails + hostile probes</td><td><span class="chip met">MET</span></td><td class="c-ev">gatekeeper rejects in 0.0s</td></tr>
+      <tr class="reveal"><td class="c-ev">9</td><td class="c-name">Observability / provenance</td><td><span class="chip met">MET</span></td><td class="c-ev">PRS URL per passage</td></tr>
+      <tr class="reveal"><td class="c-ev">10</td><td class="c-name">Eval: 40+ runs, personas, boxplot</td><td><span class="chip met">MET</span></td><td class="c-ev">50 runs · 3 boxplot PNGs</td></tr>
+      <tr class="reveal"><td class="c-ev">11</td><td class="c-name">Deploy on a cloud platform</td><td><span class="chip partial">PARTIAL</span></td><td class="c-ev">Vercel live; Render stale build</td></tr>
+    </tbody>
+  </table>
+  <div class="brand-mark bl">VidhanAI</div>
+  <div class="brand-mark tr">02 / Coverage</div>
+</section>
+
+<!-- ============================================
+     SLIDE 4 — WHY 6 AGENTS (professor's point)
+     ============================================ -->
+<section class="slide" data-section="Agents">
+  <div class="slide-num">03</div>
+  <div class="section-tag">No random agents</div>
+  <h2 class="slide-title reveal">Why exactly <span class="accent">6 agents</span></h2>
+  <p class="slide-sub reveal">Each agent exists because of one specific observed pain point. Test used: each maps 1:1 to a distinct, <strong>measurable</strong> failure mode in the per-agent telemetry. Merge any two and the pain point returns; a seventh would have nothing distinct to measure.</p>
+
+  <div class="agent-head">
+    <div>Agent</div><div>Pain point it solves</div><div>Why it is not folded in</div>
+  </div>
+  <div class="agent-row reveal">
+    <div class="a-name"><span class="a-num">1</span>Safety Gatekeeper</div>
+    <div class="a-pain">Single-agent systems burn LLM tokens on hostile queries before anyone notices.</div>
+    <div class="a-why"><strong>Zero-token</strong> rule gate — rejects before the expensive agents are reached.</div>
+  </div>
+  <div class="agent-row reveal">
+    <div class="a-name"><span class="a-num">2</span>Legislative Retriever</div>
+    <div class="a-pain">A summariser that also retrieves paraphrases the law — the #1 legal-RAG hallucination source.</div>
+    <div class="a-why">Only agent with a multi-step tool loop; retrieval accuracy measured on its own.</div>
+  </div>
+  <div class="agent-row reveal">
+    <div class="a-name"><span class="a-num">3</span>Plain-Language Simplifier</div>
+    <div class="a-pain">Raw statute is unusable for a citizen; the one generative step = the one hallucination point.</div>
+    <div class="a-why">Strongest model; followed by a verifier that did not see its reasoning.</div>
+  </div>
+  <div class="agent-row reveal">
+    <div class="a-name"><span class="a-num">4</span>Amendment Analyst</div>
+    <div class="a-pain">"What changed?" needs structured diffing — a different accuracy measure than summarising.</div>
+    <div class="a-why">Own tool (<span style="font-family:var(--font-mono);font-size:0.9em">amendment_diff</span>) and own output shape.</div>
+  </div>
+  <div class="agent-row reveal">
+    <div class="a-name"><span class="a-num">5</span>Fact Verifier</div>
+    <div class="a-pain">Self-verification inside one context inherits its own bias.</div>
+    <div class="a-why"><strong>Deliberately denied</strong> the simplifier's prompt/trace; reports claims_found / claims_missing.</div>
+  </div>
+  <div class="agent-row reveal">
+    <div class="a-name"><span class="a-num">6</span>Citation Finder</div>
+    <div class="a-pain">An answer without checkable sources is unverifiable.</div>
+    <div class="a-why">Uses the <strong>network</strong>, not the bill corpus — failures independent of retrieval.</div>
+  </div>
+  <div class="brand-mark bl">VidhanAI</div>
+  <div class="brand-mark tr">03 / Agents</div>
+</section>
+
+<!-- ============================================
+     SLIDE 5 — PROTOCOLS: MCP + A2A + PARALLEL
+     ============================================ -->
+<section class="slide" data-section="Protocols">
+  <div class="slide-num">04</div>
+  <div class="section-tag">Real wire protocols</div>
+  <h2 class="slide-title reveal">Not in-process calls — <span class="accent">real boundaries</span></h2>
+  <p class="slide-sub reveal">Three claims that are easy to fake and were instead proven with separate processes and wall-clock evidence.</p>
+
+  <div class="grid grid-3">
+    <div class="panel reveal">
+      <h3>MCP — tools across a process</h3>
+      <ul>
+        <li>7 tools served by an MCP <strong>stdio server</strong> in its <strong>own process</strong></li>
+        <li>Client binds <span class="mono">bill_lookup</span>, <span class="mono">semantic_search</span>, <span class="mono">citation_finder</span></li>
+        <li><span class="mono">server_info</span> reports a PID distinct from the client's</li>
+        <li><strong>Byte-identical</strong> results in-process vs over MCP</li>
+      </ul>
+    </div>
+    <div class="panel reveal" data-d="2">
+      <h3>A2A — agent to agent</h3>
+      <ul>
+        <li>Google ADK agent served as an <strong>A2A 1.0 card</strong> on its own process</li>
+        <li>Card at <span class="mono">127.0.0.1:8765/.well-known/agent-card.json</span></li>
+        <li>CrewAI side is the <strong>JSON-RPC client</strong> (<span class="mono">message/send</span>)</li>
+        <li>Verified by <span class="mono">verify_a2a.py</span> — PASS</li>
+      </ul>
+    </div>
+    <div class="panel reveal" data-d="3">
+      <h3>Parallel — genuinely concurrent</h3>
+      <ul>
+        <li>Fork-join on a <strong>ThreadPoolExecutor</strong>: 2 branches</li>
+        <li>Branch A: retriever → simplifier → verifier · Branch B: citation</li>
+        <li>Concurrency proven by <strong>wall-clock interval overlap</strong></li>
+        <li><span class="mono">branches_overlapped: true</span> — not a label</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="takeaway reveal" data-d="4">
+    Thread-safety work this demanded: locked tool cache, thread-local callback sink so parallel workers' events are attributed, locked quota pacer — three real defects found and fixed.
+  </div>
+  <div class="brand-mark bl">VidhanAI</div>
+  <div class="brand-mark tr">04 / Protocols</div>
+</section>
+
+<!-- ============================================
+     SLIDE 6 — EVALUATION RESULTS
+     ============================================ -->
+<section class="slide" data-section="Evaluation">
+  <div class="slide-num">05</div>
+  <div class="section-tag">Measured, not asserted</div>
+  <h2 class="slide-title reveal">50 runs · parallel is <span class="accent">2.6× faster</span></h2>
+  <p class="slide-sub reveal">Same frozen question set, same judges (two model families so no model grades its own family's output). 22 successful runs, 28 provider-quota errors — the errors are logged as such, not hidden.</p>
+
+  <div class="chart-frame reveal">
+    <img src="assets/boxplot_duration_by_arch.png" alt="Duration by architecture: parallel 57.2s mean vs sequential 149.4s mean">
+    <div class="chart-cap"><strong>Mean duration by architecture (11 runs each).</strong> Parallel 57.2 s vs sequential 149.4 s on identical questions — the fork-join converts into a real, repeatable latency win, not a theoretical one.</div>
+  </div>
+  <div class="brand-mark bl">VidhanAI</div>
+  <div class="brand-mark tr">05 / Evaluation</div>
+</section>
+
+<!-- ============================================
+     SLIDE 7 — QUALITY + PERSONAS
+     ============================================ -->
+<section class="slide" data-section="Quality">
+  <div class="slide-num">06</div>
+  <div class="section-tag">Answer quality</div>
+  <h2 class="slide-title reveal">Grounded <span class="accent">4.42</span> / complete <span class="accent">4.92</span></h2>
+  <p class="slide-sub reveal">Two LLM judges score every answer 1–5. Every passage carries its PRS URL, so the grounded score is anchored to a source a reader can open.</p>
+
+  <div class="grid grid-2">
+    <div class="chart-frame reveal">
+      <img src="assets/boxplot_grounded_by_persona.png" alt="Groundedness score by persona distribution">
+      <div class="chart-cap"><strong>Groundedness by persona.</strong> The spread answers "is this robust across who is asking?" — citizen, student, journalist, MP aide and neutral queries all land in the same band.</div>
+    </div>
+    <div class="chart-frame reveal" data-d="2">
+      <img src="assets/boxplot_duration_by_persona.png" alt="Duration by persona distribution">
+      <div class="chart-cap"><strong>Duration by persona.</strong> No single persona shape blows up latency — the release is uniform rather than driven by a friendly-query case.</div>
+    </div>
+  </div>
+
+  <div class="takeaway reveal" data-d="4">
+    5 personas × 4 architectures. Judges: <span class="mono">gpt-oss-120b</span> and <span class="mono">qwen3-8b</span> — two families, so a model never grades its own family's output.
+  </div>
+  <div class="brand-mark bl">VidhanAI</div>
+  <div class="brand-mark tr">06 / Quality</div>
+</section>
+
+<!-- ============================================
+     SLIDE 8 — WHAT RUNNING IT FOUND (defects)
+     ============================================ -->
+<section class="slide" data-section="Honesty">
+  <div class="slide-num">07</div>
+  <div class="section-tag">Evidence, not intention</div>
+  <h2 class="slide-title reveal">Eight defects found by <span class="accent">running it</span></h2>
+  <p class="slide-sub reveal">Every one of these came from an actual failing run or sweep — not from inspection.</p>
+
+  <div class="grid grid-2">
+    <div class="panel reveal">
+      <h3>Fixed this cycle</h3>
+      <ul>
+        <li><strong>UnboundLocalError</strong> masking real sweep failures — <span class="mono">body</span> initialised in the except branch</li>
+        <li><strong>Serialization crash</strong> — raw CrewAI Tool / datetime / UUID objects leaked into the API response; tool <em>names</em> only now</li>
+        <li><strong>WinError 10053/10054</strong> transport aborts — retry class excludes quota so the sweep stops honestly</li>
+        <li><strong>Sampling skew</strong> — <span class="mono">--per-arch</span> front-sliced one kind; now round-robins</li>
+      </ul>
+    </div>
+    <div class="panel reveal" data-d="2">
+      <h3>Concurrency + tool boundary</h3>
+      <ul>
+        <li><strong>Tool-cache race</strong> under parallel — now lock-guarded with hit/miss counters</li>
+        <li><strong>Lost callback events</strong> — sink is now thread-local, so worker-thread events are attributed</li>
+        <li><strong>MCP wedge on spawn</strong> — retry once on transient handshake races; <span class="mono">close()</span> safe when unconnected</li>
+        <li><strong>Concurrent-sweep summary clobber</strong> — summary regenerated from the full 50-run file</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="takeaway reveal" data-d="4">
+    Known limitation, stated plainly: <strong>Groq's free tier caps 200k tokens/day/model</strong> — refilling at ~2.3 tokens/s, not midnight. 28 of 50 runs hit it. Hence three model buckets and a resumable sweep.
+  </div>
+  <div class="brand-mark bl">VidhanAI</div>
+  <div class="brand-mark tr">07 / Honesty</div>
+</section>
+
+<!-- ============================================
+     SLIDE 9 — DEMO / REPRODUCTION + CLOSING
+     ============================================ -->
+<section class="slide" data-section="Reproduce">
+  <div class="slide-num">08</div>
+  <div class="section-tag">Run it yourself</div>
+  <h2 class="slide-title reveal">Every number is <span class="accent">reproducible</span></h2>
+
+  <div class="grid grid-2">
+    <div class="panel reveal">
+      <h3>Backend + API</h3>
+      <ul>
+        <li><span class="mono">cd backend && python app.py</span> → <span class="mono">127.0.0.1:5000</span></li>
+        <li><span class="mono">GET /api/architecture</span> — live roster + versions</li>
+        <li><span class="mono">POST /api/agent/research</span> — returns answer + trace + Pydantic envelope</li>
+        <li>Frontend on Vite at <span class="mono">127.0.0.1:5173</span></li>
+      </ul>
+    </div>
+    <div class="panel reveal" data-d="2">
+      <h3>Four verifiers — one command each</h3>
+      <ul>
+        <li><span class="mono">verify_parallel.py</span> — branch overlap (PASS)</li>
+        <li><span class="mono">verify_mcp.py</span> — process boundary (PASS)</li>
+        <li><span class="mono">verify_a2a.py</span> — JSON-RPC to ADK (PASS)</li>
+        <li><span class="mono">verify_eval.py</span> — harness + boxplots (PASS)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel reveal" data-d="3" style="margin-top:34px">
+    <h3>The one open item</h3>
+    <ul>
+      <li><strong>Criterion 11, partial:</strong> the Vercel frontend is live (HTTP 200 verified); the Render backend URL is a stale v2 build whose <span class="mono">/api/*</span> 404s. <span class="mono">render.yaml</span> is correct — redeploying that service from this branch closes the row.</li>
+    </ul>
+  </div>
+
+  <div class="brand-mark bl">VidhanAI</div>
+  <div class="brand-mark tr">08 / Reproduce</div>
+</section>
+
+<!-- ============================================
+     SLIDE 10 — CLOSING
+     ============================================ -->
+<section class="slide" data-section="Close">
+  <div class="grid-texture"></div>
+  <div class="title-card reveal" style="top:300px;width:1100px">
+    <div class="eyebrow">The bottom line</div>
+    <h1 style="font-size:76px">Built it.<br>Ran it.<br>Proved it.</h1>
+    <p class="tagline" style="font-size:27px">10 of 11 criteria met, each backed by a verifier or a recorded run. The honest partial is deployment — and the fix is one click, not more work.</p>
+  </div>
+  <div class="title-meta" style="top:300px;width:400px">
+    <div class="meta-block reveal" data-d="2">
+      <div class="meta-k">Deliverables</div>
+      <div class="meta-v" style="font-size:21px">evaluation/ — 5 submissions<br>+ this deck</div>
+    </div>
+    <div class="meta-block reveal" data-d="3">
+      <div class="meta-k">Branch</div>
+      <div class="meta-v" style="font-size:21px">feature/agentic-eval</div>
+    </div>
+  </div>
+  <div class="brand-mark bl">DEATHGATE01 · 2026-11-01</div>
+  <div class="brand-mark tr">VidhanAI</div>
+</section>
+
+</main>
+</div>
+
+<div class="deck-controls">
+  <button id="prevBtn" aria-label="Previous slide">← PREV</button>
+  <span id="slideCounter">1 / 10</span>
+  <button id="nextBtn" aria-label="Next slide">NEXT →</button>
+</div>
+
+<script>
+/* ============================================
+   SLIDE PRESENTATION CONTROLLER
+   Fixed 1920×1080 stage, uniform scale, letterbox.
+   ============================================ */
+class SlidePresentation {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.currentSlide = 0;
+        this.stage = document.getElementById('deckStage');
+        this.counter = document.getElementById('slideCounter');
+        this.track = document.getElementById('progressTrack');
+        this.total = this.slides.length;
+        this.setupStageScale();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupButtons();
+        this.setupInlineEditing();
+        this.showSlide(0);
+    }
+
+    /* Uniform stage scaling — never reflows slide content */
+    setupStageScale() {
+        const scale = () => {
+            const factor = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            const x = (window.innerWidth - 1920 * factor) / 2;
+            const y = (window.innerHeight - 1080 * factor) / 2;
+            this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+        };
+        scale();
+        window.addEventListener('resize', scale);
+    }
+
+    setupKeyboardNav() {
+        document.addEventListener('keydown', (e) => {
+            if (e.target && e.target.getAttribute && e.target.getAttribute('contenteditable')) return;
+            switch (e.key) {
+                case 'ArrowRight': case ' ': case 'PageDown':
+                    e.preventDefault(); this.next(); break;
+                case 'ArrowLeft': case 'PageUp':
+                    e.preventDefault(); this.prev(); break;
+                case 'Home': this.showSlide(0); break;
+                case 'End': this.showSlide(this.total - 1); break;
+            }
+        });
+    }
+
+    setupTouchNav() {
+        let startX = null;
+        document.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            if (startX === null) return;
+            const dx = e.changedTouches[0].clientX - startX;
+            if (Math.abs(dx) > 60) { dx < 0 ? this.next() : this.prev(); }
+            startX = null;
+        }, { passive: true });
+    }
+
+    setupButtons() {
+        document.getElementById('prevBtn').addEventListener('click', () => this.prev());
+        document.getElementById('nextBtn').addEventListener('click', () => this.next());
+    }
+
+    next() { this.showSlide(this.currentSlide + 1); }
+    prev() { this.showSlide(this.currentSlide - 1); }
+
+    showSlide(index) {
+        this.currentSlide = Math.max(0, Math.min(index, this.total - 1));
+        this.slides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === this.currentSlide);
+            slide.classList.toggle('visible', i === this.currentSlide);
+        });
+        this.counter.textContent = `${this.currentSlide + 1} / ${this.total}`;
+        this.track.style.width = `${((this.currentSlide + 1) / this.total) * 100}%`;
+        const sec = this.slides[this.currentSlide].dataset.section || '';
+        document.title = sec ? `VidhanAI — ${sec}` : 'VidhanAI — Part 2 Evaluation';
+    }
+
+    /* ---- Inline editing (post-draft affordance) ---- */
+    setupInlineEditing() {
+        const hotzone = document.querySelector('.edit-hotzone');
+        const toggle = document.getElementById('editToggle');
+        let hideTimeout = null;
+
+        const show = () => { clearTimeout(hideTimeout); toggle.classList.add('show'); };
+        const hide = () => {
+            hideTimeout = setTimeout(() => {
+                if (!document.body.classList.contains('editing')) toggle.classList.remove('show');
+            }, 400);
+        };
+
+        hotzone.addEventListener('mouseenter', show);
+        hotzone.addEventListener('mouseleave', hide);
+        toggle.addEventListener('mouseenter', show);
+        toggle.addEventListener('mouseleave', hide);
+        hotzone.addEventListener('click', () => this.toggleEditMode());
+        toggle.addEventListener('click', () => this.toggleEditMode());
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'e' || e.key === 'E') && !(e.target && e.target.getAttribute && e.target.getAttribute('contenteditable'))) {
+                this.toggleEditMode();
+            }
+        });
+    }
+
+    toggleEditMode() {
+        const editing = document.body.classList.toggle('editing');
+        document.getElementById('editToggle').classList.toggle('active', editing);
+        this.slides.forEach((s) => {
+            s.querySelectorAll('h1,h2,h3,p,li,td,.big-label,.a-pain,.a-why,.chart-cap,.meta-v').forEach((el) => {
+                if (editing) {
+                    el.setAttribute('contenteditable', 'true');
+                    el.style.outline = '1px dashed rgba(255,87,34,.5)';
+                } else {
+                    el.removeAttribute('contenteditable');
+                    el.style.outline = 'none';
+                }
+            });
+        });
+        if (editing) document.querySelector('.edit-toggle').classList.add('show');
+    }
+}
+
+new SlidePresentation();
+</script>
+</body>
+</html>

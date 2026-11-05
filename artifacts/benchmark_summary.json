@@ -1,0 +1,35 @@
+{
+  "total_runs": 45,
+  "mean_latency_ms": 3.67,
+  "median_latency_ms": 2.9,
+  "p95_latency_ms": 7.69,
+  "min_latency_ms": 0.52,
+  "max_latency_ms": 9.31,
+  "total_estimated_tokens": 86850,
+  "avg_tokens_per_run": 1930.0,
+  "total_cost_usd": 0.0304,
+  "avg_cost_per_case_usd": 0.000675,
+  "recommendation_distribution": {
+    "REJECT": 36,
+    "REFER_TO_SENIOR_COMMITTEE": 9
+  },
+  "architecture_latency_breakdown": {
+    "mean": {
+      "BLACKBOARD_HIERARCHICAL": 2.3346666666666662,
+      "PARALLEL_FANOUT": 6.218,
+      "SEQUENTIAL_PIPELINE": 2.45
+    },
+    "median": {
+      "BLACKBOARD_HIERARCHICAL": 2.0,
+      "PARALLEL_FANOUT": 6.11,
+      "SEQUENTIAL_PIPELINE": 2.57
+    },
+    "std": {
+      "BLACKBOARD_HIERARCHICAL": 1.6511505368191282,
+      "PARALLEL_FANOUT": 1.7222958099997974,
+      "SEQUENTIAL_PIPELINE": 0.9008567350821425
+    }
+  },
+  "boxplot_image": "artifacts\\benchmark_boxplot.png",
+  "heatmap_image": "artifacts\\agent_heatmap.png"
+}

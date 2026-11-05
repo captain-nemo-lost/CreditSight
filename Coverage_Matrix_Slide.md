@@ -1,0 +1,29 @@
+# 📊 CreditSight: Project Coverage Matrix vs Baseline Criteria (Phase 2)
+
+**Course:** Agentic AI (Phase 2 Evaluation - 30 Marks)  
+**Project:** CreditSight — Explainable Multi-Agent AI Loan Underwriting & Risk Assessment  
+**Team Members:**  
+- **Abhimanyu Sharma** (Roll No: 230662) — *Applicant Data & Underwriting Review*  
+- **Abhijeet Kumar Tiwari** (Roll No: 230650) — *Credit Risk & Quantitative Modeling*  
+- **Sachin Singh** (Roll No: 230543) — *Regulatory Policy, Coordinator & Blackboard Orchestration*  
+
+---
+
+### 🏆 Executive Summary: **10 / 11 Criteria Met (91% Completed)**
+
+| Criterion ID | Evaluation Requirement | Status | Implemented Technical Approach in CreditSight | WIP Progress Report Chapter / Heading |
+| :---: | :--- | :---: | :--- | :--- |
+| **C1** | **Messaging Architecture / Context Sharing** | **MET (100%)** | Centralized thread-safe `Blackboard` with RLock, immutable audit history, and event subscribers; comparative `PeerToPeerPipeline` evaluated for coupling and memory overhead. | [Chapter 2.1: Blackboard State vs Peer-to-Peer Architecture](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#21-blackboard-shared-state-architecture-vs-peer-to-peer) |
+| **C2** | **Tool Integration using MCP** | **MET (100%)** | Implemented 3 external tools adhering to Model Context Protocol (MCP) spec: `mcp_financial_calculator`, `mcp_bureau_database_lookup`, `mcp_regulatory_policy_retriever`. | [Chapter 4: Model Context Protocol (MCP) Tool Integration](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#4-tool-integration-using-model-context-protocol-mcp) |
+| **C3** | **Structured Output using Pydantic** | **MET (100%)** | 10+ rigorously typed Pydantic models: `ApplicantProfile`, `FinancialRatios`, `CreditRiskAssessment`, `PolicyComplianceReport`, `CreditMemo`, `A2AMessageEnvelope`. | [Chapter 5: Structured Output Contracts & Pydantic Schemas](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#5-structured-output-contracts-using-pydantic) |
+| **C4** | **Agentic Design Patterns** | **MET (100%)** | Implemented & evaluated 3 distinct Agentic patterns: **Hierarchical Coordinator** (Primary), **Parallel Fan-Out/Fan-In**, and **Sequential Pipeline**. | [Chapter 6: Agentic Design Patterns: Hierarchical, Parallel & Sequential](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#6-agentic-design-patterns-implementation--evaluation) |
+| **C5** | **Task Monitoring & Callbacks (Heatmap)** | **MET (100%)** | `ExecutionCallbackMonitor` captures step-level latency, token consumption, and tool errors; generates high-contrast 2D MAS Execution Heatmap (`artifacts/agent_heatmap.png`). | [Chapter 7: Task Monitoring, Callbacks & MAS Heatmap](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#7-task-monitoring-callbacks--mas-agent-heatmap) |
+| **C6** | **Agent-to-Agent (A2A) Communication** | **MET (100%)** | Standardized `A2ABus` implementing A2A protocol envelope specification; bridges heterogeneous agent frameworks with strict payload verification. | [Chapter 3.2: Agent-to-Agent (A2A) Interoperability Bus](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#32-agent-to-agent-a2a-protocol-bus) |
+| **C7** | **CrewAI + Google ADK Dual Framework** | **MET (100%)** | Strict dual framework usage: `ApplicantDataAgent` & `RegulatoryPolicyAgent` built in **Google ADK**; `CreditRiskAgent` & `CoordinatorAgent` built in **CrewAI**. | [Chapter 3.1: Dual Framework Agent Assignment](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#31-dual-agentic-framework-crewai--google-adk) |
+| **C8** | **System Security & Guardrails (Personas)** | **MET (100%)** | Multi-tier `SecurityGuardrail` for regex/semantic prompt injection detection, abusive/toxic language parsing, and tool type verification; evaluated across 5 applicant persona variances. | [Chapter 8: System Security, Guardrails & Persona Variances](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#8-system-security-guardrails--adversarial-personas) |
+| **C9** | **Observability & Audit Tracing** | **MET (100%)** | End-to-end provenance with immutable state logging, structured event timelines, tool call audit records, and unique provenance trace IDs stamped on every `CreditMemo`. | [Chapter 9: Observability, Audit Provenance & Traceability](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#9-observability-auditability--provenance) |
+| **C10** | **40+ Runs Benchmark & Boxplot** | **MET (100%)** | Executed 45 benchmark runs across 3 architectures and 5 personas; captured latency, token cost, and accuracy; generated statistical summary & Boxplot (`artifacts/benchmark_boxplot.png`). | [Chapter 10: 45-Run Statistical Benchmark & Boxplot Analysis](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#10-end-to-end-performance-evaluation-45-runs--boxplot) |
+| **C11** | **Cloud Deployment Readiness** | **PARTIAL (90%)** | Production `Dockerfile`, `docker-compose.yml`, `render.yaml`, and interactive Streamlit UI (`creditsight/ui/app.py`) tested locally and ready for 1-click cloud container hosting. | [Chapter 11: Containerization & Cloud Deployment Blueprint](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/CreditSight_WIP_Progress_Report.md#11-cloud-deployment-architecture) |
+
+---
+*Generated presentation artifact available at:* [Coverage_Matrix_Slide.pptx](file:///c:/Users/abhis/OneDrive/Desktop/credit%20sight/result/Coverage_Matrix_Slide.pptx)
