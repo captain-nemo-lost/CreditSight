@@ -39,6 +39,11 @@ secrets.toml
 .DS_Store
 Thumbs.db
 
+# Frontend Node / Vite build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
 # Scratch temporary testing scripts
 scratch/
 test_*

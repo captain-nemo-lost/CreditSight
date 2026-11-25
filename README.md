@@ -37,13 +37,23 @@
 
 ## 🚀 How to Run the Project for Evaluation
 
-### Option 1: Launch Interactive Streamlit Web UI (Recommended for Live Demo)
+### Option 1: Launch Interactive React + FastAPI Web UI (Recommended for Live Demo)
+```bash
+# 1. Start the FastAPI Backend (serves API + built React bundle)
+uvicorn creditsight.api.server:app --host 0.0.0.0 --port 8080
+
+# (Optional Development Mode with Vite HMR)
+cd frontend && npm install && npm run dev
+```
+Open `http://localhost:8080` (or `http://localhost:5173` in Vite dev mode) to test applicant personas, inspect the live Blackboard shared memory, observe A2A message exchanges, examine 5-tier prompt injection defenses, and view interactive MAS telemetry!
+
+### Option 2: Legacy Streamlit Web UI
 ```bash
 streamlit run creditsight/ui/app.py
 ```
-Open `http://localhost:8501` to test applicant personas, inspect the live Blackboard shared memory, observe A2A message exchanges, examine prompt injection defenses, and view the MAS heatmap and boxplot!
+Open `http://localhost:8501` to run the legacy Streamlit dashboard.
 
-### Option 2: Run CLI Pipeline & 45-Run Benchmark
+### Option 3: Run CLI Pipeline & 45-Run Benchmark
 ```bash
 python main.py
 ```

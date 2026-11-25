@@ -11,6 +11,8 @@ venv/
 .venv/
 build/
 dist/
+frontend/node_modules
+frontend/dist
 .pytest_cache/
 .coverage
 htmlcov/
